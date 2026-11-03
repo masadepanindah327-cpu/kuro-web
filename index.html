@@ -3,32 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kuro — Your Yandere Companion</title>
+  <title>Kuro — 2D Interactive</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    body { background: linear-gradient(180deg, #1a1a24 0%, #2a2a35 100%); color: #f0f0f0; font-family: sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
-    #canvas-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; }
-    #hint { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); z-index: 5; background: rgba(10,10,15,0.6); padding: 8px 16px; border-radius: 20px; font-size: 12px; color: #a090b0; pointer-events: none; animation: fadeHint 4s forwards; }
-    @keyframes fadeHint { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
-    #chat-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; height: 35vh; background: rgba(10,10,15,0.85); backdrop-filter: blur(10px); border: 1px solid #4a2c5e; border-radius: 16px; z-index: 10; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
+    body { background: #121216; color: #fff; font-family: sans-serif; overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; }
+    
+    #character-container {
+      position: relative;
+      width: 100vw;
+      height: 65vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    #kuro-img {
+      height: 100%;
+      max-width: 100vw;
+      object-fit: contain;
+      transition: transform 0.1s ease-out;
+      pointer-events: none;
+    }
+
+    .hitbox {
+      position: absolute;
+      cursor: pointer;
+      z-index: 5;
+    }
+    
+    #hit-head { top: 5%; left: 30%; width: 40%; height: 25%; }
+    #hit-chest { top: 30%; left: 25%; width: 50%; height: 25%; }
+    #hit-hair { top: 10%; left: 15%; width: 70%; height: 50%; }
+    #hit-body { top: 55%; left: 20%; width: 60%; height: 40%; }
+
+    #chat-container { width: 100%; height: 35vh; background: #121216; display: flex; flex-direction: column; border-top: 1px solid #4a2c5e; z-index: 10; }
     #chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-    .message { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.4; animation: fadeIn 0.3s ease; word-wrap: break-word; }
+    .message { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.4; animation: fadeIn 0.3s ease; word-wrap: break-word; }
     .message.user { align-self: flex-end; background: #6a4c8e; color: #fff; border-bottom-right-radius: 4px; }
     .message.kuro { align-self: flex-start; background: #2a2a35; color: #d1c4e9; border: 1px solid #4a2c5e; border-bottom-left-radius: 4px; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    #chat-input-area { display: flex; padding: 10px; background: rgba(0,0,0,0.3); border-top: 1px solid #4a2c5e; gap: 8px; }
-    #chat-input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #4a2c5e; background: #1a1a24; color: #fff; font-size: 14px; outline: none; }
-    #chat-input::placeholder { color: #7a6a8a; }
-    #send-btn { padding: 0 20px; border-radius: 8px; border: none; background: #6a4c8e; color: white; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-    #send-btn:hover { background: #8a6cae; }
+    
+    #chat-input-area { display: flex; padding: 10px; background: #1a1a24; gap: 8px; }
+    #chat-input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #4a2c5e; background: #121216; color: #fff; font-size: 14px; outline: none; }
+    #send-btn { padding: 0 20px; border-radius: 8px; border: none; background: #6a4c8e; color: white; font-weight: bold; cursor: pointer; }
     #send-btn:active { transform: scale(0.95); }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 </head>
 <body>
-  <div id="canvas-container"></div>
-  <div id="hint">Sentuh atau klik tubuh Kuro. Dia akan merespons.</div>
+  <div id="character-container">
+    <!-- GANTI URL DI BAWAH INI PAKAI LINK GAMBAR KARAKTER YANG LO MAU -->
+    <img id="kuro-img" src="https://i.ibb.co/6PZzXqz/kuro-placeholder.jpg" alt="Kuro">
+    
+    <div class="hitbox" id="hit-head" data-part="head"></div>
+    <div class="hitbox" id="hit-chest" data-part="chest"></div>
+    <div class="hitbox" id="hit-hair" data-part="hair"></div>
+    <div class="hitbox" id="hit-body" data-part="body"></div>
+  </div>
+
   <div id="chat-container">
     <div id="chat-messages"></div>
     <div id="chat-input-area">
@@ -36,6 +68,7 @@
       <button id="send-btn">Kirim</button>
     </div>
   </div>
-  <script src="/app.js"></script>
+  
+  <script src="/app2d.js"></script>
 </body>
 </html>
